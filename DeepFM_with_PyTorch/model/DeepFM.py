@@ -26,8 +26,7 @@ class DeepFM(nn.Module):
     Huifeng Guo, Ruiming Tang, Yunming Yey, Zhenguo Li, Xiuqiang He.
     """
 
-    def __init__(self, feature_sizes, embedding_size=4,
-                 hidden_dims=[32, 32], num_classes=1, dropout=[0.5, 0.5], 
+    def __init__(self, feature_sizes, embedding_size=4, hidden_dims=[32, 32], num_classes=1, dropout=[0.5, 0.5],
                  use_cuda=True, verbose=False):
         """
         Initialize a new network
@@ -94,14 +93,10 @@ class DeepFM(nn.Module):
         fm_first_order = torch.cat(fm_first_order_emb_arr, 1)
         fm_second_order_emb_arr = [(torch.sum(emb(Xi[:, i, :]), 1).t() * Xv[:, i]).t() for i, emb in enumerate(self.fm_second_order_embeddings)]
         fm_sum_second_order_emb = sum(fm_second_order_emb_arr)
-        fm_sum_second_order_emb_square = fm_sum_second_order_emb * \
-            fm_sum_second_order_emb  # (x+y)^2
-        fm_second_order_emb_square = [
-            item*item for item in fm_second_order_emb_arr]
-        fm_second_order_emb_square_sum = sum(
-            fm_second_order_emb_square)  # x^2+y^2
-        fm_second_order = (fm_sum_second_order_emb_square -
-                           fm_second_order_emb_square_sum) * 0.5
+        fm_sum_second_order_emb_square = fm_sum_second_order_emb * fm_sum_second_order_emb  # (x+y)^2
+        fm_second_order_emb_square = [item*item for item in fm_second_order_emb_arr]
+        fm_second_order_emb_square_sum = sum(fm_second_order_emb_square)  # x^2+y^2
+        fm_second_order = (fm_sum_second_order_emb_square - fm_second_order_emb_square_sum) * 0.5
         """
             deep part
         """
@@ -114,8 +109,7 @@ class DeepFM(nn.Module):
         """
             sum
         """
-        total_sum = torch.sum(fm_first_order, 1) + \
-                    torch.sum(fm_second_order, 1) + torch.sum(deep_out, 1) + self.bias
+        total_sum = torch.sum(fm_first_order, 1) + torch.sum(fm_second_order, 1) + torch.sum(deep_out, 1) + self.bias
         return total_sum
 
     def fit(self, loader_train, loader_val, optimizer, epochs=100, verbose=False, print_every=100):

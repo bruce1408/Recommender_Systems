@@ -3,12 +3,14 @@ Preprocess Criteo dataset. This dataset was used for the Display Advertising
 Challenge (https://www.kaggle.com/c/criteo-display-ad-challenge).
 """
 import os
-import sys
-import click
+# import sys
+# import click
 import random
 import collections
 
 # There are 13 integer features and 26 categorical features
+import pandas as pd
+
 continous_features = range(1, 14)
 categorial_features = range(14, 40)
 
@@ -34,10 +36,9 @@ class CategoryDictGenerator:
                 features = line.rstrip('\n').split('\t')
                 for i in range(0, self.num_feature):
                     if features[categorial_features[i]] != '':
-                        self.dicts[i][features[categorial_features[i]]] += 1
+                        self.dicts[i][features[categorial_features[i]]] += 1 # 所有类别数据出现的次数
         for i in range(0, self.num_feature):
-            self.dicts[i] = filter(lambda x: x[1] >= cutoff,
-                                   self.dicts[i].items())
+            self.dicts[i] = filter(lambda x: x[1] >= cutoff, self.dicts[i].items())
             self.dicts[i] = sorted(self.dicts[i], key=lambda x: (-x[1], x[0]))
             vocabs, _ = list(zip(*self.dicts[i]))
             self.dicts[i] = dict(zip(vocabs, range(1, len(vocabs) + 1)))
@@ -73,6 +74,13 @@ class ContinuousFeatureGenerator:
                         if val > continous_clip[i]:
                             val = continous_clip[i]
 
+
+    def readCsv(self, csvpath, continous_features):
+        df = pd.read_csv(csvpath)
+        for index, i in enumerate(df.columns[1: 14]):
+            df.iloc[df[i] > continous_clip[index]] = continous_clip[index]
+            df.iloc[:, 1: 14].astype('int')
+
     def gen(self, idx, val):
         if val == '':
             return 0.0
@@ -80,9 +88,6 @@ class ContinuousFeatureGenerator:
         return val
 
 
-# @click.command("preprocess")
-# @click.option("--datadir", type=str, help="Path to raw criteo dataset")
-# @click.option("--outdir", type=str, help="Path to save the processed data")
 def preprocess(datadir, outdir, num_train_sample = 10000, num_test_sample = 10000):
     """
     All the 13 integer features are normalzied to continous values and these
@@ -94,8 +99,7 @@ def preprocess(datadir, outdir, num_train_sample = 10000, num_test_sample = 1000
     dists.build(os.path.join(datadir, 'train.txt'), continous_features)
 
     dicts = CategoryDictGenerator(len(categorial_features))
-    dicts.build(
-        os.path.join(datadir, 'train.txt'), categorial_features, cutoff=200)
+    dicts.build(os.path.join(datadir, 'train.txt'), categorial_features, cutoff=200)
 
     dict_sizes = dicts.dicts_sizes()
     with open(os.path.join(outdir, 'feature_sizes.txt'), 'w') as feature_sizes:
@@ -140,8 +144,7 @@ def preprocess(datadir, outdir, num_train_sample = 10000, num_test_sample = 1000
                                           .rstrip('.'))
                 categorial_vals = []
                 for i in range(0, len(categorial_features)):
-                    val = dicts.gen(i, features[categorial_features[
-                        i] - 1])
+                    val = dicts.gen(i, features[categorial_features[i] - 1])
                     categorial_vals.append(str(val))
 
                 continous_vals = ','.join(continous_vals)

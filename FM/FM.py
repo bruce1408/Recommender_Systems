@@ -50,9 +50,6 @@ def sgd_fm(datamatrix, label, k, iter, alpha):
             # 交叉特征
             jiaocha = np.sum((np.multiply(inner1, inner1) - inner2), axis=1) / 2.0
             ypredict = w0 + datamatrix[i] * w + jiaocha
-#             print("predict")
-#             print(np.shape(ypredict))
-#             print(ypredict[0, 0])
             yp = sigmoid(label[i]*ypredict[0, 0])
             loss = -(np.log(yp))
             w0 = w0 - alpha * (yp - 1) * label[i] * 1

@@ -59,23 +59,17 @@ class DeepFM(nn.Module):
         """
             init fm part
         """
-        self.fm_first_order_embeddings = nn.ModuleList(
-            [nn.Embedding(feature_size, 1) for feature_size in self.feature_sizes])
-        self.fm_second_order_embeddings = nn.ModuleList(
-            [nn.Embedding(feature_size, self.embedding_size) for feature_size in self.feature_sizes])
+        self.fm_first_order_embeddings = nn.ModuleList([nn.Embedding(feature_size, 1) for feature_size in self.feature_sizes])
+        self.fm_second_order_embeddings = nn.ModuleList([nn.Embedding(feature_size, self.embedding_size) for feature_size in self.feature_sizes])
         """
             init deep part
         """
-        all_dims = [self.field_size * self.embedding_size] + \
-            self.hidden_dims + [self.num_classes]
+        all_dims = [self.field_size * self.embedding_size] + self.hidden_dims + [self.num_classes]
         for i in range(1, len(hidden_dims) + 1):
-            setattr(self, 'linear_'+str(i),
-                    nn.Linear(all_dims[i-1], all_dims[i]))
+            setattr(self, 'linear_'+str(i), nn.Linear(all_dims[i-1], all_dims[i])) # 设置 python 属性
             # nn.init.kaiming_normal_(self.fc1.weight)
-            setattr(self, 'batchNorm_' + str(i),
-                    nn.BatchNorm1d(all_dims[i]))
-            setattr(self, 'dropout_'+str(i),
-                    nn.Dropout(dropout[i-1]))
+            setattr(self, 'batchNorm_' + str(i), nn.BatchNorm1d(all_dims[i]))
+            setattr(self, 'dropout_'+str(i), nn.Dropout(dropout[i-1]))
 
     def forward(self, Xi, Xv):
         """
@@ -85,30 +79,33 @@ class DeepFM(nn.Module):
         - Xi: A tensor of input's index, shape of (N, field_size, 1)
         - Xv: A tensor of input's value, shape of (N, field_size, 1)
         """
-        """
-            fm part
-        """
 
+        # fm part
+        # fm_first_order_emb_arr = []
+        # for i, emb in enumerate(self.fm_first_order_embeddings):
+        #     fm_first_order_emb_arr.append((torch.sum(emb(Xi[:, i, :]), 1).t() * Xv[:, i].t()))
         fm_first_order_emb_arr = [(torch.sum(emb(Xi[:, i, :]), 1).t() * Xv[:, i]).t() for i, emb in enumerate(self.fm_first_order_embeddings)]
         fm_first_order = torch.cat(fm_first_order_emb_arr, 1)
+        # fm_second_order_emb_arr = []
+        # for i, emb in enumerate(self.fm_second_order_embeddings):
+        #     fm_second_order_emb_arr.append((torch.sum(emb(Xi[:, i, :]), 1).t() * Xv[:, i].t()))
         fm_second_order_emb_arr = [(torch.sum(emb(Xi[:, i, :]), 1).t() * Xv[:, i]).t() for i, emb in enumerate(self.fm_second_order_embeddings)]
+
         fm_sum_second_order_emb = sum(fm_second_order_emb_arr)
         fm_sum_second_order_emb_square = fm_sum_second_order_emb * fm_sum_second_order_emb  # (x+y)^2
         fm_second_order_emb_square = [item*item for item in fm_second_order_emb_arr]
         fm_second_order_emb_square_sum = sum(fm_second_order_emb_square)  # x^2+y^2
         fm_second_order = (fm_sum_second_order_emb_square - fm_second_order_emb_square_sum) * 0.5
-        """
-            deep part
-        """
+
+        # deep part
         deep_emb = torch.cat(fm_second_order_emb_arr, 1)
         deep_out = deep_emb
         for i in range(1, len(self.hidden_dims) + 1):
             deep_out = getattr(self, 'linear_' + str(i))(deep_out)
             deep_out = getattr(self, 'batchNorm_' + str(i))(deep_out)
             deep_out = getattr(self, 'dropout_' + str(i))(deep_out)
-        """
-            sum
-        """
+
+        # sum
         total_sum = torch.sum(fm_first_order, 1) + torch.sum(fm_second_order, 1) + torch.sum(deep_out, 1) + self.bias
         return total_sum
 

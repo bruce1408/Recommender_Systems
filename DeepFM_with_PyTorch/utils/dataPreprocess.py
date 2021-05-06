@@ -26,22 +26,24 @@ class CategoryDictGenerator:
 
     def __init__(self, num_feature):
         self.dicts = []
-        self.num_feature = num_feature
+        self.cout = 0
+        self.num_feature = num_feature #  26
         for i in range(0, num_feature):
             self.dicts.append(collections.defaultdict(int))
 
     def build(self, datafile, categorial_features, cutoff=0):
         with open(datafile, 'r') as f:
             for line in f:
+                self.cout +=1
                 features = line.rstrip('\n').split('\t')
                 for i in range(0, self.num_feature):
                     if features[categorial_features[i]] != '':
                         self.dicts[i][features[categorial_features[i]]] += 1 # 所有类别数据出现的次数
         for i in range(0, self.num_feature):
-            self.dicts[i] = filter(lambda x: x[1] >= cutoff, self.dicts[i].items())
+            self.dicts[i] = filter(lambda x: x[1] >= cutoff, self.dicts[i].items()) # 大于等于数字cutoff进行排序
             self.dicts[i] = sorted(self.dicts[i], key=lambda x: (-x[1], x[0]))
-            vocabs, _ = list(zip(*self.dicts[i]))
-            self.dicts[i] = dict(zip(vocabs, range(1, len(vocabs) + 1)))
+            vocabs, _ = list(zip(*self.dicts[i])) # bug 问题
+            self.dicts[i] = dict(zip(vocabs, range(1, len(vocabs) + 1)))  # 按照出现次数进行排序之后然后重新进行构建，value是1-n的名次
             self.dicts[i]['<unk>'] = 0
 
     def gen(self, idx, key):
@@ -88,7 +90,7 @@ class ContinuousFeatureGenerator:
         return val
 
 
-def preprocess(datadir, outdir, num_train_sample = 10000, num_test_sample = 10000):
+def preprocess(datadir, outdir, num_train_sample = 900, num_test_sample = 900):
     """
     All the 13 integer features are normalzied to continous values and these
     continous features are combined into one vecotr with dimension 13.
@@ -99,7 +101,7 @@ def preprocess(datadir, outdir, num_train_sample = 10000, num_test_sample = 1000
     dists.build(os.path.join(datadir, 'train.txt'), continous_features)
 
     dicts = CategoryDictGenerator(len(categorial_features))
-    dicts.build(os.path.join(datadir, 'train.txt'), categorial_features, cutoff=200)
+    dicts.build(os.path.join(datadir, 'train.txt'), categorial_features, cutoff=2)
 
     dict_sizes = dicts.dicts_sizes()
     with open(os.path.join(outdir, 'feature_sizes.txt'), 'w') as feature_sizes:
@@ -118,12 +120,10 @@ def preprocess(datadir, outdir, num_train_sample = 10000, num_test_sample = 1000
                 continous_vals = []
                 for i in range(0, len(continous_features)):
                     val = dists.gen(i, features[continous_features[i]])
-                    continous_vals.append("{0:.6f}".format(val).rstrip('0')
-                                            .rstrip('.'))
+                    continous_vals.append("{0:.6f}".format(val).rstrip('0').rstrip('.'))
                 categorial_vals = []
                 for i in range(0, len(categorial_features)):
-                    val = dicts.gen(i, features[categorial_features[
-                        i]])
+                    val = dicts.gen(i, features[categorial_features[i]])
                     categorial_vals.append(str(val))
 
                 continous_vals = ','.join(continous_vals)
@@ -140,8 +140,7 @@ def preprocess(datadir, outdir, num_train_sample = 10000, num_test_sample = 1000
                 continous_vals = []
                 for i in range(0, len(continous_features)):
                     val = dists.gen(i, features[continous_features[i] - 1])
-                    continous_vals.append("{0:.6f}".format(val).rstrip('0')
-                                          .rstrip('.'))
+                    continous_vals.append("{0:.6f}".format(val).rstrip('0').rstrip('.'))
                 categorial_vals = []
                 for i in range(0, len(categorial_features)):
                     val = dicts.gen(i, features[categorial_features[i] - 1])

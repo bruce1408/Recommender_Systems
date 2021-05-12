@@ -5,8 +5,8 @@ import numpy as np
 from random import normalvariate #正态分布
 from sklearn.preprocessing import MinMaxScaler as MM #可将特征缩放到给定的最小值和最大值之间
 import pandas as pd
-data_train = pd.read_csv('/Users/bruce_trie/Downloads/FM/diabetes_train.txt', header=None)
-data_test = pd.read_csv('/Users/bruce_trie/Downloads/FM/diabetes_test.txt', header=None)
+data_train = pd.read_csv('./data/FM/diabetes_train.txt', header=None)
+data_test = pd.read_csv('./data/diabetes_test.txt', header=None)
 
 
 def preprocessing(data_input):

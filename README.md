@@ -91,11 +91,165 @@ FM(Factorization machines, 因子分解机) 是点击率预估场景中最常见
 复杂度为： $O\left(n^{2} k\right)$
 
 #### 五、FM具体求解
+使用矩阵分解来做；
+(1) 每个特征 $x_{i}$ 对应的隐向量 $v_{i}$ 组成的矩阵 $V$ :
+$$
+V=\left[\begin{array}{c}
+v_{1}^{T} \\
+v_{2}^{T} \\
+\ldots \\
+v_{n}^{T}
+\end{array}\right]=\left[\begin{array}{cccc}
+v_{11} & v_{12} & \ldots & v_{1 k} \\
+v_{21} & v_{22} & \ldots & v_{2 k} \\
+\ldots & \ldots & \ldots & \ldots \\
+v_{n 1} & v_{n 2} & \ldots & v_{n k}
+\end{array}\right]_{n \times k}
+$$
+
+即矩阵 $V$ 的第行表示：第维特征 $x_{i}$ 的隐向量 $v_{i}$
+
+则矩阵 $V^{T}$ 为：
+$$
+V^{T}=\left[\begin{array}{llll}
+v_{1} & v_{2} & \ldots & v_{n}
+\end{array}\right]=\left[\begin{array}{cccc}
+v_{11} & v_{21} & \ldots & v_{n 1} \\
+v_{12} & v_{22} & \ldots & v_{n 2} \\
+\ldots & \ldots & \ldots & \ldots \\
+v_{1 k} & v_{2 k} & \ldots & v_{n k}
+\end{array}\right]_{k \times n}
+$$
+
+(2) 多项式模型的二阶特征系数 $w_{i j}$ 组成的方阵 $W$
+$$
+W=\left[\begin{array}{cccc}
+\mathbf{w}_{11} & w_{12} & \ldots & w_{1 n} \\
+w_{21} & \mathbf{w}_{22} & \ldots & w_{2 n} \\
+\ldots & \ldots & \ldots & \ldots \\
+w_{n 1} & w_{n 2} & \ldots & \mathrm{w}_{\mathrm{nn}}
+\end{array}\right]_{n \times n}
+$$
+
+(3) FM模型的二阶特征系数 $<v_{i}, v_{j}>$ 组成的方阵 $\widehat{W}$
+$$
+\begin{array}{c}
+\hat{W}=V \times V^{T}=\left[\begin{array}{c}
+v_{1}^{T} \\
+v_{2}^{T} \\
+\ldots \\
+v_{n}^{T}
+\end{array}\right] \times\left[\begin{array}{llll}
+v_{1} & v_{2} & \ldots & v_{n}
+\end{array}\right]=\left[\begin{array}{cccc}
+\mathbf{v}_{1}^{\mathrm{T}} \mathbf{v}_{1} & v_{1}^{T} v_{2} & \ldots & v_{1}^{T} v_{n} \\
+v_{2}^{T} v_{1} & \mathbf{v}_{2}^{\mathrm{T}} \mathbf{v}_{2} & \ldots & v_{2}^{T} v_{n} \\
+\ldots & \ldots & \ldots & \ldots \\
+v_{n}^{T} v_{1} & v_{n}^{T} v_{2} & \ldots & \mathbf{v}_{\mathbf{n}}^{\mathrm{T}} \mathbf{v}_{\mathbf{n}}
+\end{array}\right]_{n \times n} \\
+=\left[\begin{array}{cccc}
+\mathbf{v}_{1}^{\mathrm{T}} \mathbf{v}_{1} & w_{12} & \ldots & w_{1 n} \\
+w_{21}^{\hat{2}} & \mathbf{v}_{2}^{\mathrm{T}} \mathbf{v}_{2} & \ldots & w_{2 n} \\
+\ldots & \ldots & \ldots & \ldots \\
+w_{n 1} & w_{n 2} & \ldots & \mathbf{v}_{\mathbf{n}}^{\mathrm{T}} \mathbf{v}_{\mathrm{n}}
+\end{array}\right]_{n \times n}
+\end{array}
+$$
+
+从上面的三个矩阵中可以看到；
+>(1) 方阵 $W$ 的非对角线上三角的元素, 即为多项式模型的二阶特征系数： $w_{i j}$
+(2) 方阵 $\widehat{W}$ 的非对角线上三角的元素，即为FM模型的二阶特征系数 $:<v_{i}, v_{j}>$
 
 
+由于 $\widehat{W}=V \times V^{T}$, 即隐向量矩阵的相乘结果，这是一种矩阵分解的方法,引用线性代数中的结论：
+- 当k足够大时，对于任意对称正定的实矩阵 $\widehat{W} \in \mathbb{R}^{n \times n}$, 均存在实矩阵 $V \in \mathbb{R}^{\mathrm{n} \times \mathrm{k}}$,
+使得 $\widehat{W}=V \times V^{T}$
 
+所以FM模型需要保证 $\widehat{W}$ 的正定性。由于FM只关心互异特征之间的关系 $(i>j)$, 因此 $\widehat{W}$ 的对角线元素可以任意取值，只需将它们取足够大 (保证行元素严格对角占优），就可以保证
+$\widehat{W}$ 的正定性
+
+我们可以改写模型的二阶项系数项
+$$
+\begin{aligned}
+& \sum_{i=1}^{n-1} \sum_{j=i+1}^{n}<v_{i}, v_{j}>x_{i} x_{j} \\
+=& \frac{1}{2}\left(\sum_{i=1}^{n} \sum_{j=1}^{n}<v_{i}, v_{j}>x_{i} x_{j}-\sum_{i=1}^{n}<v_{i}, v_{i}>x_{i} x_{i}\right) \\
+=& \frac{1}{2}\left(\sum_{i=1}^{n} \sum_{j=1}^{n} \sum_{f=1}^{k} v_{i f} v_{j f} x_{i} x_{j}-\sum_{i=1}^{n} \sum_{f=1}^{k} v_{i f}^{2} x_{i}^{2}\right) \\
+=& \frac{1}{2} \sum_{f=1}^{k}\left[\sum_{i=1}^{n}\left(v_{i f} x_{i}\right) \sum_{j=1}^{n}\left(v_{j f} x_{j}\right)-\sum_{i=1}^{n} v_{i f}^{2} x_{i}^{2}\right] \\
+=& \frac{1}{2} \sum_{f=1}^{k}\left[\left(\sum_{i=1}^{n}\left(v_{i f} x_{i}\right)\right)^{2}-\sum_{i=1}^{n} v_{i f}^{2} x_{i}^{2}\right]
+\end{aligned}
+$$
+
+并对上面的过程做一个简化和解释：
+>第1个等号：对称方阵 $\widehat{W}$ 的所有元素之和减去主对角线元素之和
+第2个等号: $<v_{i}, v_{j}>$ 向量内积展开成累加形式
+第3个等号: 提出公共部分 $\sum_{f=1}^{k}$
+第4个等号：表示为"和平方"减去"平方和"
+
+简化之后的表达式，FM模型方程为：
+
+$\hat{y}(X)=w_{0}+\sum_{i=1}^{n} w_{i} x_{i}+\frac{1}{2} \sum_{f=1}^{k}\left[\left(\sum_{i=1}^{n}\left(v_{i f} x_{i}\right)\right)^{2}-\sum_{i=1}^{n} v_{i f}^{2} x_{i}^{2}\right]$
+
+其中参数个数为： $1+n+k n$
+模型的复杂度为： $O(k n)$
+可以看到通过数学上的化简，FM模型的复杂度降低到了线性级别
+#### 六、损失函数
+利用FM模型方程，可以进行各种机器学习预测的任务，如回归、分类和排名等
+
+对于回归问题，损失函数可以取最小平方误差函数
+
+$$
+\operatorname{loss}(\hat{y}, y)=\frac{1}{2}(\hat{y}-y)^{2}
+$$
+
+对于分类问题, 损失函数可以取logit逻辑函数
+$$
+\operatorname{loss}(\hat{y}, y)=\log \left(1+e^{-\hat{y} y}\right)
+$$
+
+#### 七、优化目标函数
+
+最优化目标函数，即最优化模型方程的参数，即转化为下面最优化问题
+$$
+\theta^{*}=\operatorname{argmin} \sum_{i=1}^{N} \operatorname{loss}\left(\hat{y}_{i}, y_{i}\right)
+$$
+
+目标函数对模型参数的偏导数通式为：
+$$
+\frac{\partial}{\partial \theta} \operatorname{loss}\left(\hat{y}_{i}(\vec{X}), y_{i}\right)=\frac{\partial \operatorname{loss}\left(\hat{y}_{i}(\vec{X}), y_{i}\right)}{\partial \hat{y}_{i}(\vec{X})} \frac{\partial \hat{y}_{i}(\vec{X})}{\partial \theta}
+$$
+
+
+对于 $R^{2}$ 和或 $\log i t$ 作为损失函数而言， $\operatorname{los} s$ 对模型估计函数 $\hat{y}(X)$ 的偏导数为:
+$$
+\frac{\partial \operatorname{loss}\left(\hat{y}_{i}(\vec{X}), y_{i}\right)}{\partial \hat{y}_{i}(\vec{X})}=\left\{\begin{array}{ll}
+\hat{y}_{i}-y_{i} & , \text { loss }=\frac{1}{2}\left(\hat{y}_{i}-y_{i}\right)^{2} \\
+\frac{-y_{i}}{1+e^{j_{i} y_{i}}} & , \operatorname{loss}=\log \left(1+e^{-\hat{y}_{i} y_{i}}\right)
+\end{array}\right.
+$$
+
+对于FM模型而言，优化的参数为： Tex parse error!，则FM模型方程对各个参数 $\theta^{*}$ 的偏
+导数为：
+$$
+\frac{\partial \hat{y}_{i}(\vec{X})}{\partial \theta}=\left\{\begin{array}{cl}
+1 & , \text { if } \theta=w_{0} \\
+x_{i} & , \text { if } \theta=w_{i} \\
+x_{i} \sum_{i=1}^{n}\left(v_{i f} x_{i}\right)-v_{i f} x_{i}^{2} & , \text { if } \theta=v_{i f}
+\end{array}\right.
+$$
+
+#### 八、FM模型优势
+
+最后我们总结出FM模型的优势:
+>(1) FM模型对特征的一阶组合和二阶组合都进行了建模
+(2) FM模型通过MF思想，基于K维的Latent Factor Vector, 处理因为数据稀疏带来
+的学习不足问题
+(3) FM模型的训练和预测的时间复杂度是线性的
+(4) FM模型可以用于DNN的embedding
 
 ### DeepFM
+线性模型由于无法引入高阶特征，所以FM模型应运而生，FM通过隐向量latent vector 做内积来表示特征组合，从理论上解决了低阶和高阶组合特征提取的问题，到那时一般受限于计算复杂度，也是只考虑2阶交叉特征。
+
+随着DNN在图像、语音、NLP领域取得突破，人们意识到了DNN在特征的表示上有优势，提出CNN模型来做CTR预估。所以，
 
 #### Tensorflow
 

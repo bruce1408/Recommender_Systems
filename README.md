@@ -51,7 +51,7 @@ $\hat{y}(X)=w_{0}+\sum_{i=1}^{n} w_{i} x_{i}+\sum_{i=1}^{n-1} \sum_{j=i+1}^{n} w
 >数据稀疏性普遍存在的实际应用场景中，二阶特征系数 $w_{i j}$ 的训练是很困难的
 
 造成的学习困难是因为：
->(1) $w_{i j}$ 的学习需要大量特征分量 $x_{i}$ 和 $x_{j}$ 都非零的样本
+>(1) $w_{i j}$ 的学习需要大量特征分量 $x_{$i$}$ 和 $x_{j}$ 都非零的样本
 (2) 样本本身是稀流的，同时满足 $x_{i} x_{j} \neq 0$ 的样本非常稀少
 
 所以多项式模型虽然加入了二阶特征组合，但是收到了数据稀疏的影响
@@ -88,7 +88,7 @@ FM(Factorization machines, 因子分解机) 是点击率预估场景中最常见
 (2) $w \in \mathbb{R}^{n}$ 表示FM模型对一阶特征的建模
 (3) $V \in \mathbb{R}^{n \times k}$ 表示FM模型对二阶特征的建模
 
-参数的个数为： $1+n+n k$
+参数的个数为： $1+n+nk$
 复杂度为： $O\left(n^{2} k\right)$
 
 #### 五、FM具体求解
@@ -393,4 +393,4 @@ tfra.dynamic_embedding 实验代码在Distrubution_recommender_sys/tfra_embeddin
 <https://github.com/tensorflow/recommenders-addons/tree/6dced6c1fa5c3b35bcc735fb3544ac059acc1561>
 <https://blog.csdn.net/GFDGFHSDS/article/details/104782245>
 
-感谢博哥，翰晨、李瑞等同事的帮助完成实验部分。
+感谢博哥，翰晨、李瑞等同事的帮助完成实验部分。(使用vscode 安装Markdown preview enhance插件后打开)

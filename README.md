@@ -22,8 +22,8 @@ $y = f(u, i)$ 表示用户$u$对物品$i$的评分。
 LR模型是简单的线性模型，原理简单，易于理解，训练非常方便，对于一般的分类或者预测问题，可以很容易的训练。但是，LR模型特征之间是彼此独立的，无法拟合特征之间的非线性关系，而现实生活中的特征之间往往不是独立的而是存在一定的内在联系。以新闻推荐为例，一般男性用户看军事新闻多，而女性用户喜欢情感类新闻，那么可以看出性别与新闻的类别有一定的关联性，如果能找出这类相关的特征，是非常有意义的，可以显著提升模型预测的准确度。
 
 #### 一、LR模型
-其中 $X$ 属于n维特征向量, 即 $X \in \mathbb{R}^{n}, y$ 属于目标值，回归问题中 $y \in \mathbb{R}$, 二分类问题中 $y \in\{-1,+1\}$
 
+其中 $X$ 属于n维特征向量, 即 $X \in \mathbb{R}^{n}, y$ 属于目标值，回归问题中 $y \in \mathbb{R}$, 二分类问题中 $y \in\{-1,+1\}$
 
 $\hat{y}(X)=w_{0}+\sum_{i=1}^{n} w_{i} x_{i}$
 
@@ -38,8 +38,8 @@ $\hat{y}(X)=w_{0}+\sum_{i=1}^{n} w_{i} x_{i}$
 (2) 二阶特征：即两个特征组合产生的新特征，如 $x_{1} x_{2}$
 (3) 高阶特征：即两个以上的特征组合产生的新特征, 如 $x_{1} x_{2} x_{3}$
 
-
 #### 二、多项式模型方程
+
 为了克服模型二阶特征的组合因素，我们用LR模型改写为二阶多项式模型：
 
 $\hat{y}(X)=w_{0}+\sum_{i=1}^{n} w_{i} x_{i}+\sum_{i=1}^{n-1} \sum_{j=i+1}^{n} w_{i j} x_{i} x_{j}$
@@ -57,6 +57,7 @@ $\hat{y}(X)=w_{0}+\sum_{i=1}^{n} w_{i} x_{i}+\sum_{i=1}^{n-1} \sum_{j=i+1}^{n} w
 所以多项式模型虽然加入了二阶特征组合，但是收到了数据稀疏的影响
 
 #### 三、FM模型方程
+
 为了克服模型无法在稀疏数据场景下学习二阶特征系数 $w_{i j}$, 我们需要将 $w_{i j}$ 表示为另外一种
 形式
 为此，针对样本 $X$ 的第维特征分量 $x_{i}$, 引入辅助隐向量 $v_{i}$
@@ -74,13 +75,13 @@ $$
 $<v_{i}, v_{j}>$, 这就是FM模型的核心思想
 
 #### 四、FM模型
+
 我们将二阶多项式模型改写为FM模型
 $$
 \hat{y}(X)=w_{0}+\sum_{i=1}^{n} w_{i} x_{i}+\sum_{i=1}^{n-1} \sum_{j=i+1}^{n}<v_{i}, v_{j}>x_{i} x_{j}
 $$
 
 FM(Factorization machines, 因子分解机) 是点击率预估场景中最常见的算法模型，FM的参数为$w_{0} \in \mathbb{R}, w \in \mathbb{R}^{n}, V \in \mathbb{R}^{n \times k}$
-
 
 各个参数的含义为：
 >(1) $w_{0} \in \mathbb{R}$ 表示FM模型的偏置
@@ -91,6 +92,7 @@ FM(Factorization machines, 因子分解机) 是点击率预估场景中最常见
 复杂度为： $O\left(n^{2} k\right)$
 
 #### 五、FM具体求解
+
 使用矩阵分解来做；
 (1) 每个特征 $x_{i}$ 对应的隐向量 $v_{i}$ 组成的矩阵 $V$ :
 $$
@@ -160,8 +162,8 @@ $$
 >(1) 方阵 $W$ 的非对角线上三角的元素, 即为多项式模型的二阶特征系数： $w_{i j}$
 (2) 方阵 $\widehat{W}$ 的非对角线上三角的元素，即为FM模型的二阶特征系数 $:<v_{i}, v_{j}>$
 
-
 由于 $\widehat{W}=V \times V^{T}$, 即隐向量矩阵的相乘结果，这是一种矩阵分解的方法,引用线性代数中的结论：
+
 - 当k足够大时，对于任意对称正定的实矩阵 $\widehat{W} \in \mathbb{R}^{n \times n}$, 均存在实矩阵 $V \in \mathbb{R}^{\mathrm{n} \times \mathrm{k}}$,
 使得 $\widehat{W}=V \times V^{T}$
 
@@ -192,7 +194,9 @@ $\hat{y}(X)=w_{0}+\sum_{i=1}^{n} w_{i} x_{i}+\frac{1}{2} \sum_{f=1}^{k}\left[\le
 其中参数个数为： $1+n+k n$
 模型的复杂度为： $O(k n)$
 可以看到通过数学上的化简，FM模型的复杂度降低到了线性级别
+
 #### 六、损失函数
+
 利用FM模型方程，可以进行各种机器学习预测的任务，如回归、分类和排名等
 
 对于回归问题，损失函数可以取最小平方误差函数
@@ -217,7 +221,6 @@ $$
 $$
 \frac{\partial}{\partial \theta} \operatorname{loss}\left(\hat{y}_{i}(\vec{X}), y_{i}\right)=\frac{\partial \operatorname{loss}\left(\hat{y}_{i}(\vec{X}), y_{i}\right)}{\partial \hat{y}_{i}(\vec{X})} \frac{\partial \hat{y}_{i}(\vec{X})}{\partial \theta}
 $$
-
 
 对于 $R^{2}$ 和或 $\log i t$ 作为损失函数而言， $\operatorname{los} s$ 对模型估计函数 $\hat{y}(X)$ 的偏导数为:
 $$
@@ -247,6 +250,7 @@ $$
 (4) FM模型可以用于DNN的embedding
 
 ### DeepFM
+
 线性模型由于无法引入高阶特征，所以FM模型应运而生，FM通过隐向量latent vector 做内积来表示特征组合，从理论上解决了低阶和高阶组合特征提取的问题，到那时一般受限于计算复杂度，也是只考虑2阶交叉特征。
 
 随着DNN在图像、语音、NLP领域取得突破，人们意识到了DNN在特征的表示上有优势，提出CNN模型来做CTR预估。所以，使用DNN模型和FM联合训练，FM模型可以捕捉到低阶交叉特征，DNN模型可以捕捉到高阶特征，从而进行端到端的训练学习。
@@ -274,8 +278,8 @@ $\hat{y}=\operatorname{sigmoid}\left(\hat{y}_{F M}+\hat{y}_{D N N}\right)$
 
 其中 $\hat{y} \in(0,1)$ 为模型预测的 $\mathrm{CTR}, \hat{y}_{F M}$ 为 FM 组件的输出, $\hat{y}_{DNN}$ 为 deep 组件的输出。
 
-
 #### 一、FM 部分
+
 FM部分主要用于一阶特征和二阶交叉特征，由两部分组成，分别是加法(Addition) 和内积(Inner Product)；
 
 $\hat{y}_{F M}=\sum_{i=1}^{d}\left(w_{i} \times x_{i}\right)+\sum_{i=1}^{d} \sum_{i=j+1}^{d}\left(\overrightarrow{\mathbf{v}}_{i} \cdot \overrightarrow{\mathbf{v}}_{j}\right) \times x_{i} \times x_{j}$；
@@ -296,14 +300,15 @@ Deep部分是一个前馈神经网络，用于学习高阶特征交互；
 <img src = "./img/architecture-dnn.png" width=600 height=300>
 </div>
 
-
 ### 三、代码实现
+
 #### Tensorflow
+
 - DeepFM tensorflow 版本的代码实现存放在DeepFM_with_Tensorflow/ 目录
 
 #### Pytorch
-- DeepFM pytorch 版本的代码实现存放在 DeepFM_with_Pytorch/ 目录
 
+- DeepFM pytorch 版本的代码实现存放在 DeepFM_with_Pytorch/ 目录
 
 ## 工程篇 Engineering
 
@@ -313,6 +318,7 @@ Deep部分是一个前馈神经网络，用于学习高阶特征交互；
 主要量化dynamic_embedding 和 embedding之间性能提升区别；
 
 ##### 1、 tf 1.x 版本embedding
+
 tf1.x版本的tf.nn.embedding_lookup 实验代码在目录Distrubution_recommender_sys/tf_nn_embedding.py中；
 >在算法平台运行即可启动任务
 %%model_training submit
@@ -336,8 +342,8 @@ tf1.x版本的tf.nn.embedding_lookup 实验代码在目录Distrubution_recommend
 --disable_model_version
 --pending_wait_time 2h
 
-
 ##### 2、tf 2.2.4版本embedding
+
 tfra.dynamic_embedding 实验代码在Distrubution_recommender_sys/tfra_embedding.py中，
 >运行下面命令即可执行
 %%model_training submit
@@ -362,6 +368,7 @@ tfra.dynamic_embedding 实验代码在Distrubution_recommender_sys/tfra_embeddin
 --pending_wait_time 2h
 
 ##### 3、实验结果
+
 本次实验其他变量保持一直，包括$batch size, epoch, dataset,embedding size$，
 实验所用数据为MovieLens；
 
@@ -373,18 +380,17 @@ tfra.dynamic_embedding 实验代码在Distrubution_recommender_sys/tfra_embeddin
 >(total cost) tfra_dynamic 1257.9s
 >(total cost) tf_nn_embedding 1336.99s
 
-
-
 ## 参考(Reference)
+
 本实验和算法参考以下博客，部分文献收录于Reference目录中：
 
-https://www.cnblogs.com/Matrix_Yao/p/4773221.html
-https://github.com/guestwalk/libffm
-http://www.cs.cmu.edu/~wcohen/10-605/2015-guest-lecture/FM.pdf
-https://tech.meituan.com/2016/03/03/deep-understanding-of-ffm-principles-and-practices.html
-https://mp.weixin.qq.com/s/LKIuLYz8fP3BL3cB1CsHlw#at
-https://discuss.tf.wiki/t/topic/1482
-https://github.com/tensorflow/recommenders-addons/tree/6dced6c1fa5c3b35bcc735fb3544ac059acc1561
-https://blog.csdn.net/GFDGFHSDS/article/details/104782245
+<https://www.cnblogs.com/Matrix_Yao/p/4773221.html>
+<https://github.com/guestwalk/libffm>
+<http://www.cs.cmu.edu/~wcohen/10-605/2015-guest-lecture/FM.pdf>
+<https://tech.meituan.com/2016/03/03/deep-understanding-of-ffm-principles-and-practices.html>
+<https://mp.weixin.qq.com/s/LKIuLYz8fP3BL3cB1CsHlw#at>
+<https://discuss.tf.wiki/t/topic/1482>
+<https://github.com/tensorflow/recommenders-addons/tree/6dced6c1fa5c3b35bcc735fb3544ac059acc1561>
+<https://blog.csdn.net/GFDGFHSDS/article/details/104782245>
 
 感谢博哥，翰晨、李瑞等同事的帮助完成实验部分。

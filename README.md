@@ -249,11 +249,126 @@ $$
 ### DeepFM
 线性模型由于无法引入高阶特征，所以FM模型应运而生，FM通过隐向量latent vector 做内积来表示特征组合，从理论上解决了低阶和高阶组合特征提取的问题，到那时一般受限于计算复杂度，也是只考虑2阶交叉特征。
 
-随着DNN在图像、语音、NLP领域取得突破，人们意识到了DNN在特征的表示上有优势，提出CNN模型来做CTR预估。所以，
+随着DNN在图像、语音、NLP领域取得突破，人们意识到了DNN在特征的表示上有优势，提出CNN模型来做CTR预估。所以，使用DNN模型和FM联合训练，FM模型可以捕捉到低阶交叉特征，DNN模型可以捕捉到高阶特征，从而进行端到端的训练学习。
 
+<div align="center">
+<img src = "./img/architecture-deepfm.png" width=600 height=300>
+</div>
+
+左边是FM模型，右边是Deep模型，在模型中，FM中的参数和Deep参数将共同参与训练，可以同时从原始特征中学习低阶特征交互和高阶特征交互，完全不需要执行特征工程。
+
+假设输入包含 sparse 特征和 dense 特征。设输入向量 $\overrightarrow{\mathbf{x}}$, 其中:
+$\overrightarrow{\mathbf{x}}=<\overrightarrow{\mathbf{x}}_{\text {sparse }}^{(1)}, \cdots, \overrightarrow{\mathbf{x}}_{\text {sparse }}^{(K)}, \overrightarrow{\mathbf{x}}_{\text {dense }}>\in \mathbb{R}^{d}$
+
+其中 $\overrightarrow{\mathbf{x}}_{\text {sparse }}^{(i)}$ 为 $field_i$ 的 one-hot 向量, $\overrightarrow{\mathbf{x}}_{\text {dense }}$ 为原始的 dense 特征, $<$ ・$>$
+为向量拼接。对于特征 $j$ (即$x_{j}$) :
+
+- 标量 $w_{j}$ 用于对它的一阶特征重要性进行建模，即 $\mathrm{FM}$ 组件左侧的 $+$ 部分。
+
+- 向量 $\overrightarrow{\mathbf{v}}_{j}$ 用于对它的二阶特征重要性进行建模，即 $\mathrm{FM}$ 组件右侧的 $\times$ 部分。
+
+- 向量 $\overrightarrow{\mathbf{v}}_{j}$ 也作为 deep 组件的输入，从而对更高阶特征交互进行建模，即 deep 组件。
+最终模型联合了 FM 组件和 Deep 组件的输出:
+
+$\hat{y}=\operatorname{sigmoid}\left(\hat{y}_{F M}+\hat{y}_{D N N}\right)$
+
+其中 $\hat{y} \in(0,1)$ 为模型预测的 $\mathrm{CTR}, \hat{y}_{F M}$ 为 FM 组件的输出, $\hat{y}_{DNN}$ 为 deep 组件的输出。
+
+
+#### 一、FM 部分
+FM部分主要用于一阶特征和二阶交叉特征，由两部分组成，分别是加法(Addition) 和内积(Inner Product)；
+
+$\hat{y}_{F M}=\sum_{i=1}^{d}\left(w_{i} \times x_{i}\right)+\sum_{i=1}^{d} \sum_{i=j+1}^{d}\left(\overrightarrow{\mathbf{v}}_{i} \cdot \overrightarrow{\mathbf{v}}_{j}\right) \times x_{i} \times x_{j}$；
+
+其中 $\overrightarrow{\mathbf{v}}_{i} \in \mathbb{R}^{k}$ 。
+
+<div align="center">
+<img src = "./img/architecture-fm.png" width=600 height=300>
+</div>
+
+- 第一项 addition unit 用于一阶特征重要性建模
+- 第二项 inner product 用于对二阶特征重要性建模
+
+#### 二、Deep部分
+
+Deep部分是一个前馈神经网络，用于学习高阶特征交互；
+<div align="center">
+<img src = "./img/architecture-dnn.png" width=600 height=300>
+</div>
+
+
+### 三、代码实现
 #### Tensorflow
+- DeepFM tensorflow 版本的代码实现存放在DeepFM_with_Tensorflow/ 目录
 
 #### Pytorch
+- DeepFM pytorch 版本的代码实现存放在 DeepFM_with_Pytorch/ 目录
 
 
 ## 工程篇 Engineering
+
+本节主要介绍[TensorFlow Recommenders-Addons
+](https://github.com/tensorflow/recommenders-addons/tree/6dced6c1fa5c3b35bcc735fb3544ac059acc1561)TFRA主要包括两个独立组件，tfra.dynamic_embedding 和 tfra.embedding_variableEmbeddingVariables组件。
+
+主要量化dynamic_embedding 和 embedding之间性能提升区别；
+
+##### 1、 tf 1.x 版本embedding
+tf1.x版本的tf.nn.embedding_lookup 实验代码在目录Distrubution_recommender_sys/tf_nn_embedding.py中；
+>在算法平台运行即可启动任务
+%%model_training submit
+-f tensorflow
+--data_input=/dataset/example/
+--parallel_mode=1
+--work_dir=/privatecode/tensorflow24/
+--pss=2
+--ps_img=harbor.weizhipin.com/arsenal_notebook/tfra:0.0.1
+--ps_cmd=python
+--ps_args=tf_nn_embedding.py
+--ps_cpu=4
+--ps_memory=8Gi
+--workers=2
+--worker_img=harbor.weizhipin.com/arsenal_notebook/tfra:0.0.1
+--worker_cmd=python
+--worker_args=tfra-movielens-1m.py
+--worker_cpu=2
+--worker_memory=16Gi
+--disable_data_save_mode
+--disable_model_version
+--pending_wait_time 2h
+
+
+##### 2、tf 2.2.4版本embedding
+tfra.dynamic_embedding 实验代码在Distrubution_recommender_sys/tfra_embedding.py中，
+>运行下面命令即可执行
+%%model_training submit
+-f tensorflow
+--data_input=/dataset/example/
+--parallel_mode=1
+--work_dir=/privatecode/tensorflow24/
+--pss=2
+--ps_img=harbor.weizhipin.com/arsenal_notebook/tfra:0.0.1
+--ps_cmd=python
+--ps_args=tfra-movielens-1m.py
+--ps_cpu=4
+--ps_memory=8Gi
+--workers=2
+--worker_img=harbor.weizhipin.com/arsenal_notebook/tfra:0.0.1
+--worker_cmd=python
+--worker_args=tfra-movielens-1m.py
+--worker_cpu=2
+--worker_memory=16Gi
+--disable_data_save_mode
+--disable_model_version
+--pending_wait_time 2h
+
+##### 3、实验结果
+本次实验其他变量保持一直，包括$batch size, epoch, dataset,embedding size$，
+实验所用数据为MovieLens；
+
+- 100多万条电影评分
+- 3900部电影
+- 6000多名用户
+
+实验结果tfra运行速度要略快于tf nn_embedding
+>(total cost) tfra_dynamic 1257.9s
+>(total cost) tf_nn_embedding 1336.99s

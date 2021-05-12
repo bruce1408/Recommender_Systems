@@ -6,6 +6,7 @@
 DeepFM_with_Tensorflow/example/data/*.csv
 *.csv
 .history/
+reference/
 
 # Byte-compiled / optimized / DLL files
 *.py[cod]

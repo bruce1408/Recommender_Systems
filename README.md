@@ -4,7 +4,7 @@
 
 ### FM
 
-推荐系统一般面临的问题是评分预测问题，给定用户集合 $U = {u_1, u_2, u_3,...u_M}$、 物品集合 $I = {i_1, i_2, i_3,.....i_N}$ ,模型是一个评分函数：
+推荐系统一般面临的问题是评分预测问题，给定用户集合 $U = {u_1, u_2, u_3,...u_M}$, 物品集合 $I = {i_1, i_2, i_3,.....i_N}$ ,模型是一个评分函数：
 $f: \mathbb{U} \times \mathbb{I} \rightarrow \mathbb{R}$
 
 $y = f(u, i)$ 表示用户$u$对物品$i$的评分。
@@ -372,3 +372,19 @@ tfra.dynamic_embedding 实验代码在Distrubution_recommender_sys/tfra_embeddin
 实验结果tfra运行速度要略快于tf nn_embedding
 >(total cost) tfra_dynamic 1257.9s
 >(total cost) tf_nn_embedding 1336.99s
+
+
+
+## 参考(Reference)
+本实验和算法参考以下博客，部分文献收录于Reference目录中：
+
+https://www.cnblogs.com/Matrix_Yao/p/4773221.html
+https://github.com/guestwalk/libffm
+http://www.cs.cmu.edu/~wcohen/10-605/2015-guest-lecture/FM.pdf
+https://tech.meituan.com/2016/03/03/deep-understanding-of-ffm-principles-and-practices.html
+https://mp.weixin.qq.com/s/LKIuLYz8fP3BL3cB1CsHlw#at
+https://discuss.tf.wiki/t/topic/1482
+https://github.com/tensorflow/recommenders-addons/tree/6dced6c1fa5c3b35bcc735fb3544ac059acc1561
+https://blog.csdn.net/GFDGFHSDS/article/details/104782245
+
+感谢博哥，翰晨、李瑞等同事的帮助完成实验部分。

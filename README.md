@@ -323,5 +323,3 @@ Deep部分是一个前馈神经网络，用于学习高阶特征交互；
 <https://discuss.tf.wiki/t/topic/1482>
 <https://github.com/tensorflow/recommenders-addons/tree/6dced6c1fa5c3b35bcc735fb3544ac059acc1561>
 <https://blog.csdn.net/GFDGFHSDS/article/details/104782245>
-
-感谢博哥，翰晨、李瑞等同事的帮助完成实验部分。
